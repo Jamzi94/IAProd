@@ -138,5 +138,4 @@ Toutes les commandes de gestion se lancent depuis le dossier `BASE_DIR` :
 ---
 
 ## License
-
-Ce projet est distribué sous la licence MIT.
+JamziCorp
