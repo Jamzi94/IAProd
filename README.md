@@ -1,158 +1,157 @@
-# IAProd
-
-Absolument. Voici un tutoriel d'exécution détaillé, adapté aux différents environnements, notamment pour les utilisateurs Windows qui ont le choix entre WSL et PowerShell.
-
 ---
 
-### Tutoriel d'Exécution Complet
+# Unified AI Stack
 
-Ce guide vous explique comment déployer la stack IA de A à Z. La méthode recommandée pour les utilisateurs Windows est d'utiliser **WSL2**, car le script est écrit en Bash (`.sh`) et Docker Desktop a des performances optimales avec WSL2.
+[![Status](https://img.shields.io/badge/status-active-success.svg)](https://shields.io/)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://shields.io/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
----
+Ce projet fournit une solution complète et en un clic pour déployer un environnement local puissant pour l'intelligence artificielle et l'automatisation. Il intègre et configure automatiquement les services suivants :
 
-### Étape 0 : Pré-requis (À faire une seule fois)
+*   🧠 **Ollama** : Pour servir des grands modèles de langage (LLM) en local.
+*   💬 **Open WebUI** : Une interface utilisateur conviviale pour interagir avec les modèles Ollama.
+*   🎨 **ComfyUI** : Un système d'interface nodale puissant pour la génération d'images et de vidéos.
+*   🤖 **n8n** : Une plateforme d'automatisation de workflows "fair-code".
+*   🐘 **PostgreSQL** : Une base de données robuste pour n8n.
 
-Avant de lancer le script, assurez-vous que votre système est prêt.
+## ✨ Fonctionnalités Clés
 
-#### Pour tous les utilisateurs :
-1.  **GPU NVIDIA** : Assurez-vous d'avoir une carte graphique NVIDIA.
-2.  **Pilotes NVIDIA** : Installez les derniers pilotes depuis le site de NVIDIA.
-3.  **Git** : Installez Git. Sur Linux, `sudo apt-get install git`. Sur Windows, téléchargez-le depuis [git-scm.com](https://git-scm.com/download/win).
+*   🚀 **Déploiement en Un Clic** : Un unique script `deploy.sh` vérifie votre système, configure et lance toute la stack.
+*   📦 **Persistance des Données Garantie** : Sépare le code de l'application (jetable) de vos données (modèles, configurations, workflows), qui sont stockées en toute sécurité sur votre machine.
+*   🔧 **Hautement Configurable** : Personnalisez facilement les ports, les chemins, et les listes de modèles/plugins via un fichier de configuration simple.
+*   🔒 **Sécurisé par Conception** : Isole les informations sensibles comme les mots de passe dans un fichier `.env` qui n'est pas partagé.
+*   ✅ **Robuste et Intelligent** : Le script de déploiement vérifie les dépendances, l'accès au GPU et l'espace disque avant de commencer.
+*   🖥️ **Multi-plateforme** : Instructions claires pour les utilisateurs Windows (via WSL2), Linux et macOS.
 
-#### Pour Windows (Recommandé : WSL2) :
-1.  **Installer WSL2** : Si ce n'est pas déjà fait, ouvrez PowerShell en tant qu'administrateur et tapez :
-    ```powershell
-    wsl --install
-    ```
-    Cela installera WSL2 et une distribution Ubuntu par défaut. Redémarrez votre ordinateur après l'installation.
-2.  **Installer Docker Desktop** : Téléchargez et installez [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/). Durant l'installation, assurez-vous que l'option **"Use WSL 2 based engine"** est cochée.
-3.  **Ouvrir un terminal WSL** : Une fois tout installé, ouvrez votre terminal Ubuntu (via le menu Démarrer).
-4.  **Installer `aria2c` dans WSL** : Dans votre terminal Ubuntu, tapez :
-    ```bash
-    sudo apt-get update && sudo apt-get install -y aria2
-    ```
+## 🏗️ Architecture
 
-#### Pour Linux (Ubuntu/Debian) :
-1.  **Installer Docker Engine** : Suivez le [guide officiel](https://docs.docker.com/engine/install/ubuntu/) pour installer Docker Engine et le plugin Compose.
-2.  **Installer le NVIDIA Container Toolkit** : Suivez le [guide officiel de NVIDIA](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) pour permettre à Docker d'utiliser votre GPU.
-3.  **Installer `aria2c`** :
-    ```bash
-    sudo apt-get update && sudo apt-get install -y aria2
-    ```
+Le principe fondamental est la séparation des conteneurs (l'application) des volumes (les données). Toutes vos données précieuses résident dans un dossier `data/` sur votre machine, tandis que les conteneurs Docker restent légers et interchangeables.
 
----
+```mermaid
+graph TD
+    subgraph Host Machine
+        subgraph "Project Folder (e.g., /mnt/c/ia_stack)"
+            A[📂 deploy.sh]
+            B[📂 config.sh]
+            C[📂 .env]
+            D[📂 data/]
+        end
+    end
 
-### Étape 1 : Préparation du Projet
+    subgraph Docker Environment
+        E[🐋 Container: Ollama]
+        F[🐋 Container: Open WebUI]
+        G[🐋 Container: ComfyUI]
+        H[🐋 Container: n8n]
+        I[🐋 Container: Postgres]
+    end
 
-1.  **Choisissez un emplacement** pour votre projet. Par exemple, `C:\Users\VotreNom\projets\ia_stack` sur Windows ou `/home/votre_nom/projets/ia_stack` sur Linux.
-2.  **Créez les 4 fichiers de configuration** à cet emplacement :
-    *   `deploy.sh`
-    *   `config.sh`
-    *   `.env`
-    *   `.gitignore`
-3.  **Copiez-collez le contenu** de chaque fichier (fourni dans ma réponse précédente) dans le fichier correspondant.
+    D -- "Models" --> E
+    D -- "User Data" --> F
+    D -- "Models, Workflows" --> G
+    D -- "Workflows, Config" --> H
+    D -- "Database Files" --> I
 
----
+    A -->|"orchestrates"| E
+    A -->|"orchestrates"| F
+    A -->|"orchestrates"| G
+    A -->|"orchestrates"| H
+    A -->|"orchestrates"| I
+```
 
-### Étape 2 : Configuration Personnalisée
+## 📋 Pré-requis
 
-Avant de lancer quoi que ce soit, vous devez vérifier deux choses :
+Avant de commencer, assurez-vous que votre système est prêt.
+
+| Logiciel                    | Windows (via WSL2)                                                              | Linux (Debian/Ubuntu)                               |
+| --------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------- |
+| **GPU & Pilotes**           | Drivers NVIDIA installés                                                        | Drivers NVIDIA installés                            |
+| **Docker**                  | [Docker Desktop](https://www.docker.com/products/docker-desktop/) (avec WSL2)     | [Docker Engine](https://docs.docker.com/engine/install/ubuntu/) & Compose Plugin |
+| **Accès GPU pour Docker**   | Géré automatiquement par Docker Desktop                                         | [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) |
+| **Git**                     | [Git for Windows](https://git-scm.com/download/win)                             | `sudo apt install git`                              |
+| **aria2**                   | `sudo apt install aria2` (dans le terminal WSL)                                 | `sudo apt install aria2`                            |
+
+## 🚀 Démarrage Rapide
+
+Suivez ces étapes pour avoir une stack fonctionnelle en quelques minutes.
+
+### 1. Préparation du Projet
+
+Créez un dossier pour votre projet et placez-y les 3 fichiers suivants :
+*   `deploy.sh` (le script principal)
+*   `config.sh` (la configuration)
+*   `.env` (les secrets)
+
+### 2. Configuration de l'Environnement
+
+⚠️ **C'est l'étape la plus importante.**
 
 1.  **Ouvrez `config.sh`** :
-    *   **IMPORTANT** : Modifiez la variable `BASE_DIR`. Elle doit pointer vers le dossier que vous venez de créer.
-        *   **Si vous utilisez WSL**, le chemin Windows `C:\Users\VotreNom\projets\ia_stack` devient `/mnt/c/Users/VotreNom/projets/ia_stack`.
-        *   **Si vous utilisez Linux**, le chemin sera par exemple `/home/votre_nom/projets/ia_stack`.
-    *   Ajustez les ports si nécessaire.
+    *   Modifiez la variable `BASE_DIR` pour qu'elle pointe vers un **chemin absolu** sur votre machine.
+        *   **Exemple WSL :** `export BASE_DIR="/mnt/c/Users/MonNom/projets/ia_stack"`
+        *   **Exemple Linux :** `export BASE_DIR="/home/mon_nom/projets/ia_stack"`
+    *   Vous pouvez aussi y changer les ports des services si les valeurs par défaut sont déjà prises.
 
 2.  **Ouvrez `.env`** :
-    *   **ACTION REQUISE** : Changez la valeur de `POSTGRES_PASSWORD` pour un mot de passe fort et secret.
+    *   Changez la valeur de `POSTGRES_PASSWORD` pour un mot de passe fort et unique.
 
----
+### 3. Lancement du Déploiement
 
-### Étape 3 : Exécution du Script
+Ouvrez un terminal (WSL ou Bash sur Linux), naviguez jusqu'au dossier de votre projet, et lancez les commandes suivantes :
 
-C'est ici que l'environnement que vous utilisez est important.
+```bash
+# 1. Naviguez vers le dossier de votre projet
+# cd /mnt/c/Users/MonNom/projets/ia_stack
 
-#### Méthode 1 : Windows avec WSL2 (La Voie Recommandée)
+# 2. Rendez le script exécutable (une seule fois)
+chmod +x deploy.sh
 
-1.  **Ouvrez votre terminal WSL** (Ubuntu).
-2.  **Naviguez jusqu'au dossier de votre projet**. Utilisez la syntaxe Linux pour les chemins Windows :
-    ```bash
-    # Exemple si votre projet est dans C:\Users\VotreNom\projets\ia_stack
-    cd /mnt/c/Users/VotreNom/projets/ia_stack
-    ```
-3.  **Rendez le script exécutable**. C'est une étape à ne faire qu'une seule fois.
-    ```bash
-    chmod +x deploy.sh
-    ```
-4.  **Lancez le script !**
-    ```bash
-    ./deploy.sh
-    ```
+# 3. Lancez le déploiement !
+./deploy.sh
+```
 
-#### Méthode 2 : Linux Natif ou macOS
+Le script va maintenant vérifier votre système, vous demander une confirmation, puis construire, télécharger et lancer tous les services. Soyez patient, cela peut prendre un certain temps.
 
-1.  **Ouvrez un terminal**.
-2.  **Naviguez jusqu'au dossier de votre projet** :
-    ```bash
-    cd /home/votre_nom/projets/ia_stack
-    ```
-3.  **Rendez le script exécutable** :
-    ```bash
-    chmod +x deploy.sh
-    ```
-4.  **Lancez le script** :
-    ```bash
-    ./deploy.sh
-    ```
+## 💻 Accès et Gestion
 
-#### Méthode 3 : Windows avec Git Bash (Alternative si vous n'avez pas WSL2)
+Une fois le déploiement terminé, vous pouvez accéder à vos services :
 
-Si vous avez installé Git for Windows, vous avez aussi "Git Bash". C'est un terminal qui comprend les commandes Linux.
+| Service      | URL                                |
+| :----------- | :--------------------------------- |
+| **Open WebUI** | `http://localhost:8080`            |
+| **ComfyUI**    | `http://localhost:8188`            |
+| **n8n**        | `http://localhost:5678`            |
 
-1.  **Allez dans votre dossier de projet** dans l'Explorateur de Fichiers Windows.
-2.  **Faites un clic droit** et sélectionnez **"Git Bash Here"**.
-3.  Une fenêtre de terminal s'ouvre, déjà positionnée dans le bon dossier.
-4.  **Rendez le script exécutable** :
-    ```bash
-    chmod +x deploy.sh
-    ```
-5.  **Lancez le script** :
-    ```bash
-    ./deploy.sh
-    ```
+### Commandes de Gestion Quotidienne
 
-#### Qu'en est-il de PowerShell ?
+Pour gérer la stack, placez-vous dans le dossier `BASE_DIR` et utilisez les commandes `docker compose` :
 
-Le script `deploy.sh` est un script **Bash**. **Il ne peut pas être exécuté directement dans PowerShell.** Vous devez obligatoirement utiliser un interpréteur Bash comme ceux fournis par **WSL** ou **Git Bash** pour lancer le déploiement initial.
+| Action                       | Commande                    |
+| :--------------------------- | :-------------------------- |
+| **Arrêter tous les services**  | `docker compose down`         |
+| **Démarrer tous les services** | `docker compose up -d`        |
+| **Redémarrer la stack**      | `docker compose restart`      |
+| **Voir les logs en direct**  | `docker compose logs -f nom-du-service` |
 
-Cependant, une fois la stack lancée, **PowerShell est parfait pour gérer Docker** avec les commandes `docker compose ps`, `docker compose down`, etc.
+## 🧩 Étendre la Stack
 
----
+### Ajouter un Modèle Ollama
 
-### Étape 4 : Suivi et Vérification
+Exécutez cette commande dans votre terminal :
+```bash
+docker exec -it ollama ollama pull nom-du-modele:tag
+```
 
-1.  Le script va s'exécuter, en affichant chaque étape.
-2.  Il effectuera les vérifications, vous demandera une confirmation, puis commencera les téléchargements et la construction. **Soyez patient**, cela peut prendre beaucoup de temps.
-3.  Une fois le script terminé, il affichera un message de succès avec les URL des services.
-4.  Ouvrez un **nouveau terminal** (PowerShell, WSL, ou autre) et vérifiez que tout est bien lancé :
-    ```bash
-    # Naviguez vers le dossier défini dans BASE_DIR
-    cd /mnt/c/Users/VotreNom/projets/ia_stack
-    
-    # Listez les conteneurs en cours d'exécution
-    docker compose ps
-    ```
-    Vous devriez voir 5 services avec le statut `running` (ou `up`).
+### Ajouter un Plugin ComfyUI
 
-### Étape 5 : Accès et Gestion
+1.  Ouvrez le fichier `config.sh`.
+2.  Ajoutez l'URL du dépôt Git du plugin à la liste `COMFYUI_PLUGINS`.
+3.  Lancez à nouveau le script `./deploy.sh`. Il ne reconstruira rien, mais il détectera et téléchargera le nouveau plugin.
 
-*   **Accédez aux interfaces web** via les URL fournies (ex: `http://localhost:8080`).
-*   **Pour gérer votre stack** (arrêter, redémarrer), utilisez les commandes `docker compose` depuis le dossier de votre projet (`BASE_DIR`) :
-    ```bash
-    # Pour tout arrêter
-    docker compose down
+## 📁 Structure du Projet Détaillée
 
-    # Pour tout redémarrer
-    docker compose up -d
-    ```
+*   `🚀 deploy.sh`: Le script d'orchestration principal. Il est idempotent et sûr à ré-exécuter.
+*   `⚙️ config.sh`: Fichier de configuration central pour les chemins, ports, et listes d'assets. C'est le seul fichier que vous devriez modifier pour la personnalisation.
+*   `🔒 .env`: Stocke les informations sensibles (mots de passe, clés API). **Doit être ignoré par Git.**
+*   `📄 .gitignore`: Assure que les secrets (`.env`) et les données volumineuses (`data/`) ne sont pas envoyés sur Git.
+*   `📂 data/`: Un dossier créé par le script pour stocker **toutes** les données persistantes, triées par service.
